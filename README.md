@@ -132,6 +132,12 @@ jwd2city/
 
 ## 使用示例
 
+### 获取经纬度
+
+可以在 [高德地图拾取器](https://lbs.amap.com/tools/picker) 获取经纬度来验证接口，本服务使用的是高德坐标系（GCJ-02）。
+
+### 接口调用
+
 ```bash
 # 查询北京城区（天安门附近）
 curl "http://localhost:8080/api/city?lon=116.405285&lat=39.904989"
