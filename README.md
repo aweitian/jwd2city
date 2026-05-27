@@ -45,10 +45,10 @@
 
 ```bash
 # 编译打包
-mvn clean package
+下载 https://github.com/aweitian/jwd2city/releases/download/v1.0/jwd2city-1.0.0.jar
 
 # 运行（无需数据库，直接启动）
-java -jar target/jwd2city-1.0.0.jar
+java -jar -Dserver.port=12508 jwd2city-1.0.0.jar
 ```
 
 ## API 接口
@@ -57,16 +57,12 @@ java -jar target/jwd2city-1.0.0.jar
 
 **请求**
 ```
-GET /api/city?lon=<经度>&lat=<纬度>
+curl "http://127.0.0.1:12508/api/city?lon=116.14&lat=39.74"
 ```
 
 **响应示例**
 ```json
-{
-    "city": "北京城区",
-    "adcode": 110000,
-    "status": "success"
-}
+{"city":"北京城区","adcode":110100,"status":"success"}
 ```
 
 **参数说明**
