@@ -122,13 +122,13 @@ jwd2city/
 
 ```bash
 # 查询北京城区（天安门附近）
-curl "http://localhost:8080/api/city?lon=116.405285&lat=39.904989"
+curl "http://localhost:12508/api/city?lon=116.405285&lat=39.904989"
 
 # 查询上海城区
-curl "http://localhost:8080/api/city?lon=121.473701&lat=31.230416"
+curl "http://localhost:12508/api/city?lon=121.473701&lat=31.230416"
 
 # 获取缓存数量
-curl "http://localhost:8080/api/stats"
+curl "http://localhost:12508/api/stats"
 ```
 
 ## 数据导出工具
@@ -137,7 +137,8 @@ curl "http://localhost:8080/api/stats"
 
 ```bash
 # 添加 MySQL 依赖后运行导出
-mvn exec:java -Dexec.mainClass="com.example.jwd2city.util.DataExportUtil"
+运行
+com.example.jwd2city.util.DataExportUtil 的main
 ```
 
 ## License
