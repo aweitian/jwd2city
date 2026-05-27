@@ -1,14 +1,18 @@
 package com.example.jwd2city.service;
 
 import com.example.jwd2city.entity.CityRegion;
-import com.example.jwd2city.repository.CityRegionRepository;
 import com.example.jwd2city.util.Point;
 import com.example.jwd2city.util.PolygonUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,28 +21,47 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service
 public class CityService {
 
-    private final CityRegionRepository cityRegionRepository;
     private final List<CityRegionCache> cache = new CopyOnWriteArrayList<>();
-
-    @Autowired
-    public CityService(CityRegionRepository cityRegionRepository) {
-        this.cityRegionRepository = cityRegionRepository;
-    }
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostConstruct
     public void init() {
-        log.info("Loading city region data into memory...");
-        List<CityRegion> regions = cityRegionRepository.findAll();
-        log.info("Found {} city regions", regions.size());
-
-        for (CityRegion region : regions) {
-            List<Point> polygon = PolygonUtil.parsePolyline(region.getPolyline());
-            if (!polygon.isEmpty()) {
-                cache.add(new CityRegionCache(region, polygon));
-            }
-        }
-
+        log.info("Loading city region data from JSON files...");
+        loadFromJsonFiles();
         log.info("Loaded {} valid city regions into memory", cache.size());
+    }
+
+    private void loadFromJsonFiles() {
+        try {
+            ClassPathResource cityDataDir = new ClassPathResource("cityData/");
+            if (!cityDataDir.exists()) {
+                log.warn("cityData directory not found in resources");
+                return;
+            }
+
+            File[] files = cityDataDir.getFile().listFiles((dir, name) -> name.endsWith(".json"));
+            if (files == null || files.length == 0) {
+                log.warn("No JSON files found in cityData directory");
+                return;
+            }
+
+            for (File file : files) {
+                try (InputStream is = new ClassPathResource("cityData/" + file.getName()).getInputStream()) {
+                    List<CityRegion> regions = objectMapper.readValue(is, new TypeReference<List<CityRegion>>() {});
+                    for (CityRegion region : regions) {
+                        List<Point> polygon = PolygonUtil.parsePolyline(region.getPolyline());
+                        if (!polygon.isEmpty()) {
+                            cache.add(new CityRegionCache(region, polygon));
+                        }
+                    }
+                    log.debug("Loaded {} regions from {}", regions.size(), file.getName());
+                } catch (IOException e) {
+                    log.warn("Failed to load file {}: {}", file.getName(), e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            log.error("Failed to read cityData directory: {}", e.getMessage());
+        }
     }
 
     public CityResult findCityByCoordinate(double lon, double lat) {
@@ -57,15 +80,15 @@ public class CityService {
         return null;
     }
 
+    public int getCachedCount() {
+        return cache.size();
+    }
+
     @lombok.Data
     @lombok.AllArgsConstructor
     public static class CityResult {
         private String name;
         private Integer adcode;
-    }
-
-    public int getCachedCount() {
-        return cache.size();
     }
 
     private static class CityRegionCache {
