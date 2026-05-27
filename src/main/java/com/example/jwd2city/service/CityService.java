@@ -6,11 +6,11 @@ import com.example.jwd2city.util.PolygonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -33,20 +33,16 @@ public class CityService {
 
     private void loadFromJsonFiles() {
         try {
-            ClassPathResource cityDataDir = new ClassPathResource("cityData/");
-            if (!cityDataDir.exists()) {
-                log.warn("cityData directory not found in resources");
-                return;
-            }
-
-            File[] files = cityDataDir.getFile().listFiles((dir, name) -> name.endsWith(".json"));
-            if (files == null || files.length == 0) {
+            PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+            Resource[] resources = resolver.getResources("classpath:cityData/*.json");
+            
+            if (resources == null || resources.length == 0) {
                 log.warn("No JSON files found in cityData directory");
                 return;
             }
 
-            for (File file : files) {
-                try (InputStream is = new ClassPathResource("cityData/" + file.getName()).getInputStream()) {
+            for (Resource resource : resources) {
+                try (InputStream is = resource.getInputStream()) {
                     List<CityRegion> regions = objectMapper.readValue(is, new TypeReference<List<CityRegion>>() {});
                     for (CityRegion region : regions) {
                         List<Point> polygon = PolygonUtil.parsePolyline(region.getPolyline());
@@ -54,9 +50,9 @@ public class CityService {
                             cache.add(new CityRegionCache(region, polygon));
                         }
                     }
-                    log.debug("Loaded {} regions from {}", regions.size(), file.getName());
+                    log.debug("Loaded {} regions from {}", regions.size(), resource.getFilename());
                 } catch (IOException e) {
-                    log.warn("Failed to load file {}: {}", file.getName(), e.getMessage());
+                    log.warn("Failed to load file {}: {}", resource.getFilename(), e.getMessage());
                 }
             }
         } catch (IOException e) {
