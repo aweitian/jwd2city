@@ -1,5 +1,6 @@
 package com.example.jwd2city.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PolygonUtil {
@@ -47,7 +48,7 @@ public class PolygonUtil {
 
     public static List<Point> parsePolyline(String polyline) {
         if (polyline == null || polyline.trim().isEmpty()) {
-            return List.of();
+            return new ArrayList<>();
         }
 
         return java.util.Arrays.stream(polyline.split(";"))
