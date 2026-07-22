@@ -2,11 +2,43 @@
 
 基于 Spring Boot 2.7.6 的经纬度查询城市服务，启动时将 JSON 文件中的城市区域数据加载到内存，使用 Java 实现多边形包含判断算法。
 
-**当前分支**: `不需要数据库` - 无需数据库，数据从 JSON 文件加载
+**当前分支**: `jar文件直接运行无任何依赖` - 无需数据库，数据从 JSON 文件加载
 
 ## 致谢
 
 感谢 [wuwenrufeng/amap](https://github.com/wuwenrufeng/amap) 提供的城市区域数据。
+
+
+## 构建与运行
+
+```bash
+# 编译打包
+下载 https://github.com/aweitian/jwd2city/releases/download/v1.0/jwd2city-1.1.0.jar
+
+# 运行（无需数据库，直接启动）
+java -jar -Dserver.port=12508 jwd2city-1.1.0.jar
+```
+
+## 测试
+```bash
+# 查询北京城区（天安门附近）
+curl "http://localhost:12508/api/city?lon=116.405285&lat=39.904989"
+{"province":"北京市","city":"北京市","adcode":110100,"status":"success"}
+
+# 查询上海城区
+curl "http://localhost:12508/api/city?lon=121.473701&lat=31.230416"
+{"province":"上海市","city":"上海市","adcode":310100,"status":"success"}
+
+# 查询安徽省/安庆市
+curl "http://localhost:12508/api/city?lon=116.156261&lat=30.782063“
+{"province":"安徽省","city":"安庆市","adcode":340800,"status":"success"}
+
+# 获取缓存数量
+curl "http://localhost:12508/api/stats"
+```
+
+
+
 
 ## 技术栈
 
@@ -41,15 +73,7 @@
 ]
 ```
 
-## 构建与运行
-
-```bash
-# 编译打包
-下载 https://github.com/aweitian/jwd2city/releases/download/v1.0/jwd2city-1.0.0.jar
-
-# 运行（无需数据库，直接启动）
-java -jar -Dserver.port=12508 jwd2city-1.0.0.jar
-```
+`
 
 ## API 接口
 
@@ -120,16 +144,6 @@ jwd2city/
 
 ### 接口调用
 
-```bash
-# 查询北京城区（天安门附近）
-curl "http://localhost:12508/api/city?lon=116.405285&lat=39.904989"
-
-# 查询上海城区
-curl "http://localhost:12508/api/city?lon=121.473701&lat=31.230416"
-
-# 获取缓存数量
-curl "http://localhost:12508/api/stats"
-```
 
 ## 数据导出工具
 

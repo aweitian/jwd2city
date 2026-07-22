@@ -14,7 +14,9 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
@@ -22,12 +24,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class CityService {
 
     private final List<CityRegionCache> cache = new CopyOnWriteArrayList<>();
+    private final Map<String, AdcodeInfo> adcodeMap = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostConstruct
     public void init() {
         log.info("Loading city region data from JSON files...");
         loadFromJsonFiles();
+        loadAdcodeMap();
         log.info("Loaded {} valid city regions into memory", cache.size());
     }
 
@@ -60,6 +64,26 @@ public class CityService {
         }
     }
 
+    private void loadAdcodeMap() {
+        try {
+            PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+            Resource resource = resolver.getResource("classpath:adcode_map.json");
+            
+            if (!resource.exists()) {
+                log.warn("adcode_map.json not found in resources");
+                return;
+            }
+
+            try (InputStream is = resource.getInputStream()) {
+                Map<String, AdcodeInfo> map = objectMapper.readValue(is, new TypeReference<Map<String, AdcodeInfo>>() {});
+                adcodeMap.putAll(map);
+                log.info("Loaded {} adcode mappings", adcodeMap.size());
+            }
+        } catch (IOException e) {
+            log.error("Failed to load adcode_map.json: {}", e.getMessage());
+        }
+    }
+
     public CityResult findCityByCoordinate(double lon, double lat) {
         Point point = new Point(lon, lat);
 
@@ -69,7 +93,17 @@ public class CityService {
             }
 
             if (PolygonUtil.isPointInPolygon(point, cacheItem.getPolygon())) {
-                return new CityResult(cacheItem.getName(), cacheItem.getAdcode());
+                Integer adcode = cacheItem.getAdcode();
+                String province = null;
+                String city = null;
+                if (adcode != null) {
+                    AdcodeInfo info = adcodeMap.get(String.valueOf(adcode).substring(0,4));
+                    if (info != null) {
+                        province = info.getProvince();
+                        city = info.getCity();
+                    }
+                }
+                return new CityResult(cacheItem.getName(), adcode, province, city);
             }
         }
 
@@ -85,6 +119,14 @@ public class CityService {
     public static class CityResult {
         private String name;
         private Integer adcode;
+        private String province;
+        private String city;
+    }
+
+    @lombok.Data
+    public static class AdcodeInfo {
+        private String province;
+        private String city;
     }
 
     private static class CityRegionCache {

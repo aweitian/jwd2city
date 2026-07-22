@@ -28,9 +28,9 @@ public class CityController {
         CityService.CityResult result = cityService.findCityByCoordinate(lon, lat);
         
         if (result != null) {
-            return ResponseEntity.ok(new CityResponse(result.getName(), result.getAdcode(), "success"));
+            return ResponseEntity.ok(new CityResponse(result.getProvince(),result.getCity(), result.getAdcode(), "success"));
         } else {
-            return ResponseEntity.ok(new CityResponse(null, null, "not_found"));
+            return ResponseEntity.ok(new CityResponse(null,null, null, "not_found"));
         }
     }
 
@@ -42,6 +42,7 @@ public class CityController {
     @Data
     @AllArgsConstructor
     public static class CityResponse {
+        private String province;
         private String city;
         private Integer adcode;
         private String status;
