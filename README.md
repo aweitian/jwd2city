@@ -13,7 +13,7 @@
 
 ```bash
 # 编译打包
-下载 https://github.com/aweitian/jwd2city/releases/download/v1.0/jwd2city-1.1.0.jar
+下载 https://github.com/aweitian/jwd2city/releases/download/v1.1/jwd2city-1.1.0.jar
 
 # 运行（无需数据库，直接启动）
 java -jar -Dserver.port=12508 jwd2city-1.1.0.jar
